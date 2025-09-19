@@ -1,146 +1,163 @@
 #include <iostream>
 #include <string>
-#include <ctime>
-#include <iomanip>
-#include <vector>
-#include <cstdlib>
-#include <cassert>
+#include <cmath>
 #include "main1.hpp"
 
-class Track
+enum Colour {red, green, blue};
+class GeomShape
 {
-    std::string name;
-    std::tm creation_date;
-    unsigned int length;
+    Colour shapeColour;
+    double center_X_AxisCoordinate;
+    double center_Y_AxisCoordinate;
+    double ShapeArea;
+    double CircumscribedRectanglesSideA;
+    double CircumscribedRectanglesSideB;
 public:
-
-    Track()
+    GeomShape()
     {
-	std::cout<< "Enter name of song: ";
-	std::cin.ignore();
-	std::getline(std::cin, name);
-    	
-	std::time_t auxilCrDateSec = std::time(nullptr);
-	std::tm* creationDateTmp = std::localtime(&auxilCrDateSec);
-	std::cout<< "Enter date of creation in format (yyyy/mm/dd): ";
-	std::cin>> std::get_time(creationDateTmp, "%Y/%m/%d");
-	creation_date = *creationDateTmp;
-
-
-    std::cout<< "Enter length in sec: ";
-	std::cin>> length;
-	assert(length > 0);
+        std::string inpColour;
+        std::cout << "Enter X-Axis and Y-Axis Coordinates of figures center: ";
+        std::cin >> center_X_AxisCoordinate >> center_Y_AxisCoordinate;
+        do
+        {
+            std::cout << "Enter colour (red,green, blue): ";
+            std::cin >> inpColour;
+        } while (inpColour != "red" && inpColour != "green" && inpColour != "blue");
+        if(inpColour == "red") shapeColour = red;
+        else if(inpColour == "green") shapeColour = green;
+        else if(inpColour == "blue") shapeColour = blue;
     }
-	std::string GetName() {return name;}
-
-    void showInfo()
+    ShowInfo()
     {
-	unsigned int len_min, len_sec;
-	len_min = length / 60;
-	len_sec = length - (len_min * 60);
-	std::cout << "name:\t\t" << name << std::endl;
-	std::cout << "Creation date:\t" << std::put_time(&creation_date, "%Y/%m/%d") << std::endl;
-	std::cout << "Length:\t\t" << len_min << " min " << len_sec << " sec.\n";
+        if(shapeColour == red) std::cout << "Red ";
+        else if(shapeColour == green) std::cout << "Green ";
+        else if(shapeColour == blue) std::cout << "Blue ";
+        std::cout << input_str << "\'s area equals to " << tmp->FigureOutArea() << ". It\'s Circumscribed Rectangle\'s Sides equals to " << CircumscribedRectanglesSideA << " and " << CircumscribedRectanglesSideB << ".\n";
+
     }
 };
 
-enum PlayerMode {play_mode, pause_mode, stop_mode, next_mode};
-
-class Player
+class Circle:public GeomShape
 {
-	int current_track_index = 0;
-	PlayerMode current_mode = stop_mode;
-	std::vector <Track*> track_list;
+    double radius;
 public:
-	Player()
-	{
-		std::string answ;
-		do
-		{
-			std::cout<< "\nAdd new track? ";
-			std::cin >> answ;
-			if(answ == "y" || answ == "yes" || answ == "YES")
-			{
-				Track* tmp = new Track;
-				track_list.push_back(tmp);
-			}
-			else if(answ == "n" || answ == "no" || answ == "NO") break;
-			else continue;
-		} while(true);
-	}
+    Circle()
+    {
+        do
+        {
+            std::cout << "Enter radius of a circle: ";
+            std::cin >> radius;
+        } while (radius <= 0);
+        ShapeArea = FigureOutArea();
+        FigureOutCircumscribedRectangle();
+    }
 
+    double FigureOutArea() { return M_PI * radius * radius; }
 
-    void play()
+    FigureOutCircumscribedRectangle()
     {
-	if(current_mode != play_mode)
-	{
-		current_mode = play_mode;
-		track_list[current_track_index]->showInfo();
-	}
-    }
-    void pause()
-    {
-	if(current_mode == play_mode)
-	{
-		current_mode = pause_mode;
-		std::cout<< "Track \"" <<  track_list[current_track_index]->GetName() << "\" paused.\n";
-	}
-    }
-    void next()
-    {
-	current_track_index = std::rand() % (track_list.size());
-	current_mode = next_mode;
-	this->play();
-    }
-    void stop()
-    {
-	if(current_mode != stop_mode)
-	{
-		current_mode = stop_mode;
-		std::cout << "Track playinng stoped.\n";
-	}
-    }
-    ~Player()
-    {
-        for(int i = 0; i < track_list.size(); ++i) { delete track_list[i]; }
+        CircumscribedRectanglesSideA = 2 * radius;
+        CircumscribedRectanglesSideB =  CircumscribedRectanglesSideA;
     }
 };
+
+class Square:public GeomShape
+{
+    double squareSideLength;
+public:
+    Square()
+    {
+        do
+        {
+            std::cout << "Enter side length of a square: ";
+            std::cin >> squareSideLength;
+        } while (squareSideLength <= 0);
+        ShapeArea = FigureOutArea();
+        FigureOutCircumscribedRectangle();
+    }
+
+    double FigureOutArea() { return squareSideLength * squareSideLength; }
+
+    FigureOutCircumscribedRectangle()
+    {
+        CircumscribedPectanglesSideA = squareSideLength;
+        CircumscribedRectanglesSideB = CircumscribedPectanglesSideA;
+    }
+};
+
+class EquilateralTriangle:public GeomShape
+{
+    double equilateralTriangleSideLength;
+public:
+    EquilateralTriangle()
+    {
+        do
+        {
+            std::cout << "Enter side length of an equilateral triangle: ";
+            std::cin >> equilateralTriangleSideLength;
+        } while (equilateralTriangleSideLength <= 0);
+        ShapeArea = FigureOutArea();
+        FigureOutCircumscribedRectangle();
+    }
+
+    double FigureOutArea() { return equilateralTriangleSideLength * equilateralTriangleSideLength * std::sqrt(3) / 4; }
+
+    FigureOutCircumscribedRectangle()
+    {
+        CircumscribedPectanglesSideA = equilateralTriangleSideLength;
+        CircumscribedPectanglesSideB = CircumscribedPectanglesSideA * sin (M_PI / 6); // sin (90 - (180/3) = sin (30), 30 in rad equals 2Pi / (360/30) => 2Pi / 12 => Pi / 6
+    }
+};
+
+class Rectangle:public GeomShape
+{
+    double rectangle_A_SideLength;
+    double rectangle_B_SideLength;
+public:
+    Rectangle()
+    {
+        double RectangleSide_A_Length;
+        double RectangleSide_B_Length;
+        do
+        {
+            std::cout << "Enter rectangles A-side length and B-side length : ";
+            std::cin >> RectangleSide_A_Length >> RectangleSide_B_Length;
+        } while (RectangleSide_A_Length <= 0 || RectangleSide_B_Length <= 0);
+        ShapeArea = FigureOutArea();
+        FigureOutCircumscribedRectangle();
+    }
+
+    double FigureOutArea() { return RectangleSide_A_Length * RectangleSide_B_Length;}
+
+    FigureOutCircumscribedRectangle()
+    {
+        CircumscribedPectanglesSideA = RectangleSide_A_Length;
+        CircumscribedPectanglesSideB = RectangleSide_B_Length);
+    }
+};
+
 
 int main()
 {
     std::string input_str;
-    Player * user_player = new Player;
+    void * tmp = nullptr;
     do
     {
-        std::cout<< "\nEnter command (play/pause/next/stop/exit): ";
+        std::cout<< "\nEnter command (circle/square/triangle/rectangle/exit): ";
         std::cin>>input_str;
-        if (input_str == "play")
-        {
-            user_player->play();
-        }
-        else if (input_str == "pause")
-        {
-            user_player->pause();
-        }
-        else if (input_str == "next")
-        {
-            user_player->next();
-        }
-        else if (input_str == "stop")
-        {
-            user_player->stop();
-        }
-        else if (input_str == "exit")
-        {
-            delete user_player;
-            user_player = nullptr;
-            break;
-        }
+        if (input_str == "circle")          (Circle *) tmp = new Circle;
+        else if (input_str == "square")     (Square *) tmp = new Square;
+        else if (input_str == "triangle")   (EquilateralTriangle *) tmp = new EquilateralTriangle;
+        else if (input_str == "rectangle")  (Rectangle * tmp) = new Rectangle;
+        else if (input_str == "exit")       break;
         else
         {
             std::cout<< "Invalid input. Try again.\n";
             continue;
         }
+        tmp->ShowInfo();
+        delete tmp;
+        tmp = nullptr;
     } while (true);
     return 0;
 }
