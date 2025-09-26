@@ -4,6 +4,7 @@
 #include "randomName.hpp"
 
 #define FOREST_SIZE 5
+#define DEBUG
 
 class Branch
 {
@@ -30,53 +31,87 @@ public:
         }
         for (int i = 0; i < childBranchNum; ++i) childBranches.push_back(new Branch(namesDATA, depth-1, this));
     }
-    Branch* findElf(const std::string & NameToFind, const int depth)
+
+    Branch* findElf(const std::string & NameToFind)
     {
         Branch* result = nullptr;
-        if(elfName == "None" || elfName == "none") std::cout<< "Incorrect name!\n";
+        if(NameToFind == "None" || NameToFind == "none") std::cout<< "Incorrect name!\n";
         else if(elfName == NameToFind) return this;
-        else if(depth != 1)
+        else if(!childBranches.empty())
         {
             for (int i = 0; i < childBranches.size(); ++i)
             {
-                result = childBranches[i]->findElf(NameToFind, depth-1);
+                result = childBranches[i]->findElf(NameToFind);
                 if(result) return result;
             }
         }
         return nullptr;
     }
-    void ShowNeighbours(const Branch* elf, bool bigBranchFound = false)
+
+    Branch* FindBigBranch()
     {
-        if(elf == nullptr || parentBranch == nullptr) return;
-        if(parentBranch->parentBranch != nullptr && !bigBranchFound)//big branch search
+        if(parentBranch == nullptr) return nullptr;
+        if(parentBranch->parentBranch != nullptr) return parentBranch->FindBigBranch();
+        else return this;
+    }
+
+    int ShowChild(Branch* excludeElf = nullptr)
+    {
+        int count = 0;
+        if (elfName != "None" && (!excludeElf  ||  (excludeElf && elfName != excludeElf->elfName)))
         {
-            ShowNeighbours(parentBranch);
+            std::cout << elfName << std::endl;
+            count++;
         }
-        else if (parentBranch->parentBranch == nullptr && !bigBranchFound)//big branch found
+        if(!childBranches.empty())
+        for (int i = 0; i < childBranches.size(); ++i) count += childBranches[i]->ShowChild(excludeElf);
+        return count;
+    }
+
+    void ShowNeighbours( const std::string & NameToFind)
+    {
+        Branch* SearchElfResult = findElf(NameToFind);
+        if (SearchElfResult)
         {
-            ShowNeighbours(elf, true);
+            std::cout << "Neighbours of " << NameToFind << ":\n";
+            int neibNum = SearchElfResult->FindBigBranch()->ShowChild(SearchElfResult);
+            std::cout << "Neighbours number = " << neibNum << std::endl;
         }
-        else if (bigBranchFound && elf->elfName != elfName)
+    }
+
+    ~Branch()
+    {
+        if (!childBranches.empty())
         {
-            std::cout << elfName;
-            if(childBranches.size() == 0) return;
-            for (int i = 0; i < childBranches.size(); ++i)
+            for (int i = childBranches.size()-1; i+1 > 0; --i)
             {
-                childBranches[i]->ShowNeighbours(elf, true);
+                if (childBranches[i]->childBranches.empty()) delete childBranches[i];
+                else childBranches[i]->~Branch();
+                childBranches[i] = nullptr;
+                childBranches.pop_back();
             }
         }
     }
 };
 
 
-
 int main()
 {
     RandomNameSurname initRandom;
     Branch* forest [FOREST_SIZE];
-    for (int i = 0; i < FOREST_SIZE; ++i) {
-        forest[i] = new Branch(initRandom, 3, nullptr);
+    for (auto & i : forest) i = new Branch(initRandom, 3, nullptr);
+
+    for (int i = 0; i < FOREST_SIZE; ++i)
+    {
+        std::cout << "Tree N" << i+1 << " contents:\n\n";
+        forest[i]->ShowChild();
+        std::cout << std::endl;
     }
 
+    std::string inputName;
+    std::cout << "Enter elf\'s name to show his neighbours: ";
+    std::getline(std::cin, inputName);
+    for (auto & i : forest) i->ShowNeighbours( inputName);
+    for (auto & i : forest) delete i;
     return 0;
 };
